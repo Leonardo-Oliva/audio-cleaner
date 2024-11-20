@@ -97,3 +97,7 @@ async def process_audio(user_id: str, file: UploadFile = File(...)):
             os.remove(input_file_path)
         if os.path.exists(output_file_path):
             os.remove(output_file_path)
+
+@app.post("/process_audio/")
+def index():
+    return {"name": "AudioCleaner"}
