@@ -46,7 +46,7 @@ async def process_audio(user_id: str, file: UploadFile = File(...)):
     os.makedirs('audios', exist_ok=True)
     with open(input_file_path, "wb") as buffer:
         buffer.write(await file.read())
-
+"""
     # Abrir o arquivo de áudio e resamplear para a taxa de amostragem desejada
     try:
         with AudioFile(input_file_path).resampled_to(sr) as f:
@@ -97,6 +97,8 @@ async def process_audio(user_id: str, file: UploadFile = File(...)):
             os.remove(input_file_path)
         if os.path.exists(output_file_path):
             os.remove(output_file_path)
+
+"""
 
 @app.post("/process_audio/")
 def index():
