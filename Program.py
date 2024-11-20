@@ -9,12 +9,13 @@ import noisereduce as nr
 import firebase_admin
 from firebase_admin import credentials, storage
 
+"""
 # Configuração do Firebase
 cred = credentials.Certificate('firebase\\audiocleaner-5dcff-firebase-adminsdk-z67xv-caf9c8b4d9.json')
 firebase_admin.initialize_app(cred, {
     'storageBucket': 'audiocleaner-5dcff.appspot.com'  # Substitua pelo nome do seu bucket
 })
-
+"""
 # Definir a taxa de amostragem (sample rate)
 sr = 44100
 
@@ -32,7 +33,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
+"""
 @app.post("/process_audio/")
 async def process_audio(user_id: str, file: UploadFile = File(...)):
     # Salvar o arquivo de áudio enviado
@@ -87,3 +88,9 @@ async def process_audio(user_id: str, file: UploadFile = File(...)):
         # Remover os arquivos locais após o upload (opcional)
         os.remove(input_file_path)
         os.remove(output_file_path)
+
+"""
+
+@app.get("/process_audio/")
+def index():
+    return {"name": "First Data"}
