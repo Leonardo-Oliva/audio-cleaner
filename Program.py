@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import json
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,13 +10,14 @@ import noisereduce as nr
 import firebase_admin
 from firebase_admin import credentials, storage
 
-"""
+
 # Configuração do Firebase
-cred = credentials.Certificate('firebase\\audiocleaner-5dcff-firebase-adminsdk-z67xv-caf9c8b4d9.json')
+firebase_credentials = json.loads(os.environ["FIREBASE_CREDENTIALS"])
+cred = credentials.Certificate(firebase_credentials)
 firebase_admin.initialize_app(cred, {
     'storageBucket': 'audiocleaner-5dcff.appspot.com'  # Substitua pelo nome do seu bucket
 })
-"""
+
 # Definir a taxa de amostragem (sample rate)
 sr = 44100
 
@@ -33,19 +35,25 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-"""
+
 @app.post("/process_audio/")
 async def process_audio(user_id: str, file: UploadFile = File(...)):
     # Salvar o arquivo de áudio enviado
+    os.makedirs('audios', exist_ok=True)
     input_file_path = f'audios/{file.filename}'
     output_file_path = input_file_path.replace('.wav', '_enhanced.wav')
 
+    os.makedirs('audios', exist_ok=True)
     with open(input_file_path, "wb") as buffer:
         buffer.write(await file.read())
 
     # Abrir o arquivo de áudio e resamplear para a taxa de amostragem desejada
-    with AudioFile(input_file_path).resampled_to(sr) as f:
-        audio = f.read(f.frames)
+    try:
+        with AudioFile(input_file_path).resampled_to(sr) as f:
+            audio = f.read(f.frames)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Erro no processamento do áudio: {str(e)}")
+
 
     # Verificar o número de canais do áudio original
     if audio.ndim == 1:  # Se o áudio for mono (1 canal)
@@ -85,12 +93,7 @@ async def process_audio(user_id: str, file: UploadFile = File(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao enviar para o Firebase: {str(e)}")
     finally:
-        # Remover os arquivos locais após o upload (opcional)
-        os.remove(input_file_path)
-        os.remove(output_file_path)
-
-"""
-
-@app.get("/process_audio/")
-def index():
-    return {"name": "First Data"}
+        if os.path.exists(input_file_path):
+            os.remove(input_file_path)
+        if os.path.exists(output_file_path):
+            os.remove(output_file_path)
