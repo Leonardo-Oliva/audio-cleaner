@@ -10,13 +10,14 @@ import noisereduce as nr
 import firebase_admin
 from firebase_admin import credentials, storage
 
-
+"""
 # Configuração do Firebase
 firebase_credentials = json.loads(os.environ["FIREBASE_CREDENTIALS"])
 cred = credentials.Certificate(firebase_credentials)
 firebase_admin.initialize_app(cred, {
     'storageBucket': 'audiocleaner-5dcff.appspot.com'  # Substitua pelo nome do seu bucket
 })
+"""
 
 # Definir a taxa de amostragem (sample rate)
 sr = 44100
@@ -46,7 +47,7 @@ async def process_audio(user_id: str, file: UploadFile = File(...)):
     os.makedirs('audios', exist_ok=True)
     with open(input_file_path, "wb") as buffer:
         buffer.write(await file.read())
-"""
+
     # Abrir o arquivo de áudio e resamplear para a taxa de amostragem desejada
     try:
         with AudioFile(input_file_path).resampled_to(sr) as f:
@@ -98,7 +99,6 @@ async def process_audio(user_id: str, file: UploadFile = File(...)):
         if os.path.exists(output_file_path):
             os.remove(output_file_path)
 
-"""
 
 @app.post("/process_audio/")
 def index():
