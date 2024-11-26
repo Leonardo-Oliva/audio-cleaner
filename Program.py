@@ -15,7 +15,6 @@ from pydantic import BaseModel
 # Configuração do Firebase
 firebase_credentials = json.loads(os.environ["FIREBASE_CREDENTIALS"])
 cred = credentials.Certificate(firebase_credentials)
-#cred = credentials.Certificate('C:\\Users\\Lel\\Documents\\GitHub\\audio-cleaner\\firebase\\firebaseconfig.json')
 firebase_admin.initialize_app(cred, {
     'storageBucket': 'audiocleaner-5dcff.appspot.com'
 })
