@@ -39,6 +39,8 @@ app.add_middleware(
 
 @app.post("/process_audio/")
 async def process_audio(user_id: str, file: UploadFile = File(...)):
+    if not file.filename.endswith('.wav'):
+        raise HTTPException(status_code=400, detail="Apenas arquivos .wav são permitidos.")
     # Salvar o arquivo de áudio enviado
     os.makedirs('audios', exist_ok=True)
     input_file_path = f'audios/{file.filename}'
