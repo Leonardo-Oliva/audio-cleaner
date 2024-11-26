@@ -40,27 +40,27 @@ app.add_middleware(
 @app.post("/process_audio/")
 async def process_audio(user_id: str, file: UploadFile = File(...)):
     try:
-    # Crie o diretório para salvar os arquivos se ele não existir
-    os.makedirs('audios', exist_ok=True)
+        # Crie o diretório para salvar os arquivos se ele não existir
+        os.makedirs('audios', exist_ok=True)
     
-    # Sanitizar o nome do arquivo
-    sanitized_filename = re.sub(r'[^\w\-_\.]', '_', file.filename)  # Remove caracteres perigosos
-    if not sanitized_filename.endswith('.wav'):
-        raise HTTPException(status_code=400, detail="Apenas arquivos .wav são permitidos.")
+        # Sanitizar o nome do arquivo
+        sanitized_filename = re.sub(r'[^\w\-_\.]', '_', file.filename)  # Remove caracteres perigosos
+        if not sanitized_filename.endswith('.wav'):
+            raise HTTPException(status_code=400, detail="Apenas arquivos .wav são permitidos.")
     
-    # Construir caminhos seguros
-    input_file_path = Path('audios') / sanitized_filename
-    output_file_path = input_file_path.with_name(input_file_path.stem + '_enhanced.wav')
+        # Construir caminhos seguros
+        input_file_path = Path('audios') / sanitized_filename
+        output_file_path = input_file_path.with_name(input_file_path.stem + '_enhanced.wav')
 
-    # Salvar o arquivo de áudio enviado
-    with open(input_file_path, "wb") as buffer:
-        buffer.write(await file.read())
+        # Salvar o arquivo de áudio enviado
+        with open(input_file_path, "wb") as buffer:
+            buffer.write(await file.read())
 
-    # Abrir o arquivo de áudio e resamplear para a taxa de amostragem desejada
-    with AudioFile(str(input_file_path)).resampled_to(sr) as f:  # Conversão para string
-        audio = f.read(f.frames)
-except Exception as e:
-    raise HTTPException(status_code=400, detail=f"Erro no processamento do áudio: {str(e)}")
+        # Abrir o arquivo de áudio e resamplear para a taxa de amostragem desejada
+        with AudioFile(str(input_file_path)).resampled_to(sr) as f:  # Conversão para string
+            audio = f.read(f.frames)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Erro no processamento do áudio: {str(e)}")
 
     # Verificar o número de canais do áudio original
     if audio.ndim == 1:  # Se o áudio for mono (1 canal)
