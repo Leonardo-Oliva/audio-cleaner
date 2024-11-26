@@ -9,8 +9,7 @@ from pedalboard import NoiseGate, Compressor, LowShelfFilter, Gain, Pedalboard
 import noisereduce as nr
 import firebase_admin
 from firebase_admin import credentials, storage
-from pathlib import Path
-import re
+import uuid
 
 # Configuração do Firebase
 firebase_credentials = json.loads(os.environ["FIREBASE_CREDENTIALS"])
@@ -41,12 +40,16 @@ app.add_middleware(
 async def process_audio(user_id: str, file: UploadFile = File(...)):
     if not file.filename.endswith('.wav'):
         raise HTTPException(status_code=400, detail="Apenas arquivos .wav são permitidos.")
+
     # Salvar o arquivo de áudio enviado
     os.makedirs('audios', exist_ok=True)
-    input_file_path = f'audios/{file.filename}'
-    output_file_path = input_file_path.replace('.wav', '_enhanced.wav')
 
-    os.makedirs('audios', exist_ok=True)
+    # Extrair o nome base do arquivo para evitar caminhos maliciosos
+    original_filename = os.path.basename(file.filename)
+    safe_filename = f"{uuid.uuid4()}_{original_filename}"  # Prefixar com UUID para evitar conflitos
+    input_file_path = os.path.join('audios', safe_filename)
+    output_file_path = os.path.join('audios', f"{os.path.splitext(original_filename)[0]}_enhanced.wav")
+
     with open(input_file_path, "wb") as buffer:
         buffer.write(await file.read())
 
