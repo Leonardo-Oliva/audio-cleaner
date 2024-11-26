@@ -1,7 +1,7 @@
 import os
 import numpy as np
 import json
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import FastAPI, File, UploadFile, HTTPException, Form
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pedalboard.io import AudioFile
@@ -10,16 +10,21 @@ import noisereduce as nr
 import firebase_admin
 from firebase_admin import credentials, storage
 import uuid
+from pydantic import BaseModel
 
 # Configuração do Firebase
 firebase_credentials = json.loads(os.environ["FIREBASE_CREDENTIALS"])
 cred = credentials.Certificate(firebase_credentials)
+#cred = credentials.Certificate('C:\\Users\\Lel\\Documents\\GitHub\\audio-cleaner\\firebase\\firebaseconfig.json')
 firebase_admin.initialize_app(cred, {
     'storageBucket': 'audiocleaner-5dcff.appspot.com'
 })
 
 # Definir a taxa de amostragem (sample rate)
 sr = 44100
+
+class AudioProcessParams(BaseModel):
+    user_id: str
 
 app = FastAPI()
 
@@ -37,7 +42,7 @@ app.add_middleware(
 )
 
 @app.post("/process_audio/")
-async def process_audio(user_id: str, file: UploadFile = File(...)):
+async def process_audio(user_id: str = Form(...), file: UploadFile = File(...)):
     if not file.filename.endswith('.wav'):
         raise HTTPException(status_code=400, detail="Apenas arquivos .wav são permitidos.")
 
