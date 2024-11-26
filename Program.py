@@ -9,12 +9,14 @@ from pedalboard import NoiseGate, Compressor, LowShelfFilter, Gain, Pedalboard
 import noisereduce as nr
 import firebase_admin
 from firebase_admin import credentials, storage
+from pathlib import Path
+import re
 
 # Configuração do Firebase
 firebase_credentials = json.loads(os.environ["FIREBASE_CREDENTIALS"])
 cred = credentials.Certificate(firebase_credentials)
 firebase_admin.initialize_app(cred, {
-    'storageBucket': 'audiocleaner-5dcff.appspot.com'  # Substitua pelo nome do seu bucket
+    'storageBucket': 'audiocleaner-5dcff.appspot.com'
 })
 
 # Definir a taxa de amostragem (sample rate)
