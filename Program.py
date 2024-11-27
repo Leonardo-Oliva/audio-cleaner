@@ -30,6 +30,7 @@ app = FastAPI()
 # Adicione as origens permitidas aqui
 origins = [
     "http://localhost:3000",  # Frontend em execução, ajuste conforme necessário
+    "http://localhost:3000/upload"
 ]
 
 app.add_middleware(
