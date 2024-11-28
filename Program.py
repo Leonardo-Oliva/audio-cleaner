@@ -30,7 +30,8 @@ app = FastAPI()
 # Adicione as origens permitidas aqui
 origins = [
     "http://localhost:3000",  # Frontend em execução, ajuste conforme necessário
-    "http://localhost:3000/upload"
+    "http://localhost:3000/upload",
+    "https://site-audio-cleaner.vercel.app"
 ]
 
 app.add_middleware(
