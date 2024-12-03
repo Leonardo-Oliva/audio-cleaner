@@ -5,7 +5,7 @@ from fastapi import FastAPI, File, UploadFile, HTTPException, Form
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pedalboard.io import AudioFile
-from pedalboard import NoiseGate, Compressor, LowShelfFilter, Gain, Pedalboard
+from pedalboard import NoiseGate, Compressor, LowShelfFilter, Gain, Pedalboard, Reverb, Chorus
 import noisereduce as nr
 import firebase_admin
 from firebase_admin import credentials, storage
@@ -43,9 +43,21 @@ app.add_middleware(
 )
 
 @app.post("/process_audio/")
-async def process_audio(user_id: str = Form(...), file: UploadFile = File(...)):
+async def process_audio(
+    user_id: str = Form(...),
+    file: UploadFile = File(...),
+    apply_noise_gate: bool = Form(default=True),
+    apply_compressor: bool = Form(default=True),
+    apply_low_shelf_filter: bool = Form(default=True),
+    apply_gain: bool = Form(default=True),
+    apply_reverb: bool = Form(default=True),
+    apply_chorus: bool = Form(default=True)
+):
     if not file.filename.endswith('.wav'):
         raise HTTPException(status_code=400, detail="Apenas arquivos .wav são permitidos.")
+
+    #Cria variavel do nome da pasta
+    pasta_efeitos = []
 
     # Salvar o arquivo de áudio enviado
     os.makedirs('audios', exist_ok=True)
@@ -75,13 +87,28 @@ async def process_audio(user_id: str = Form(...), file: UploadFile = File(...)):
     # Reduzir o ruído usando a biblioteca noisereduce
     reduced_noise = nr.reduce_noise(y=audio, sr=sr, stationary=True, prop_decrease=0.75)
 
-    # Configurar a pedalboard com vários efeitos
-    board = Pedalboard([
-        NoiseGate(threshold_db=-30, ratio=1.5, release_ms=250),
-        Compressor(threshold_db=-16, ratio=2.5),
-        LowShelfFilter(cutoff_frequency_hz=400, gain_db=10, q=1),
-        Gain(gain_db=10)
-    ])
+    # Configurar a pedalboard com efeitos baseados nas opções fornecidas
+    effects = []
+    if apply_noise_gate:
+        effects.append(NoiseGate(threshold_db=-30, ratio=1.5, release_ms=250))
+        pasta_efeitos.append("noise_gate")
+    if apply_compressor:
+        effects.append(Compressor(threshold_db=-16, ratio=2.5))
+        pasta_efeitos.append("compressor")
+    if apply_low_shelf_filter:
+        effects.append(LowShelfFilter(cutoff_frequency_hz=400, gain_db=10, q=1))
+        pasta_efeitos.append("low_shelf_filter")
+    if apply_gain:
+        effects.append(Gain(gain_db=10))
+        pasta_efeitos.append("gain")
+    if apply_reverb:
+        effects.append(Reverb(room_size=0.5, damping=0.5, wet_level=0.3))
+        pasta_efeitos.append("reverb")
+    if apply_chorus:
+        effects.append(Chorus(rate_hz=1.5, depth=0.5, mix=0.3))
+        pasta_efeitos.append("chorus")
+
+    board = Pedalboard(effects)
 
     # Aplicar os efeitos ao áudio com ruído reduzido
     effected = board(reduced_noise, sr)
@@ -96,10 +123,13 @@ async def process_audio(user_id: str = Form(...), file: UploadFile = File(...)):
 
     # Enviar o arquivo processado para o Firebase Storage
     bucket = storage.bucket()
-    blob = bucket.blob(f'{user_id}/{os.path.basename(output_file_path)}')
+    #blob = bucket.blob(f'{user_id}/{os.path.basename(output_file_path)}')
+    blob = bucket.blob(f'{user_id}/{"-".join(pasta_efeitos)}+{os.path.basename(output_file_path.replace("_enhanced", ""))}/{os.path.basename(output_file_path)}')
+    blob_input_file = bucket.blob(f'{user_id}/{"-".join(pasta_efeitos)}+{os.path.basename(output_file_path.replace("_enhanced", ""))}/{os.path.basename(output_file_path.replace("_enhanced", ""))}')
 
     try:
         blob.upload_from_filename(output_file_path)
+        blob_input_file.upload_from_filename(input_file_path)
         return JSONResponse(content={"message": "Áudio processado com sucesso!"})
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao enviar para o Firebase: {str(e)}")
@@ -108,6 +138,7 @@ async def process_audio(user_id: str = Form(...), file: UploadFile = File(...)):
             os.remove(input_file_path)
         if os.path.exists(output_file_path):
             os.remove(output_file_path)
+
 
 
 @app.post("/process_audio/")
