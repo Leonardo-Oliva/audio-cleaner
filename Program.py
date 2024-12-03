@@ -124,7 +124,7 @@ async def process_audio(
 
     # Enviar o arquivo processado para o Firebase Storage
     bucket = storage.bucket()
-    nome_pasta_arquivo = f"{"-".join(pasta_efeitos)}+{os.path.basename(output_file_path.replace("_enhanced", ""))}+{datetime.now().strftime("%d=%m=%Y %H:%M")}"
+    nome_pasta_arquivo = f"{"-".join(pasta_efeitos)}+{os.path.basename(output_file_path.replace("_enhanced", "")).replace("+", "").replace("-", "").replace("=", "")}+{datetime.now().strftime("%d=%m=%Y %H:%M")}"
     blob = bucket.blob(f'{user_id}/{nome_pasta_arquivo}/{os.path.basename(output_file_path)}')
     blob_input_file = bucket.blob(f'{user_id}/{nome_pasta_arquivo}/{os.path.basename(output_file_path.replace("_enhanced", ""))}')
 
