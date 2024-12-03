@@ -11,6 +11,7 @@ import firebase_admin
 from firebase_admin import credentials, storage
 import uuid
 from pydantic import BaseModel
+from datetime import datetime
 
 # Configuração do Firebase
 firebase_credentials = json.loads(os.environ["FIREBASE_CREDENTIALS"])
@@ -123,9 +124,9 @@ async def process_audio(
 
     # Enviar o arquivo processado para o Firebase Storage
     bucket = storage.bucket()
-    #blob = bucket.blob(f'{user_id}/{os.path.basename(output_file_path)}')
-    blob = bucket.blob(f'{user_id}/{"-".join(pasta_efeitos)}+{os.path.basename(output_file_path.replace("_enhanced", ""))}/{os.path.basename(output_file_path)}')
-    blob_input_file = bucket.blob(f'{user_id}/{"-".join(pasta_efeitos)}+{os.path.basename(output_file_path.replace("_enhanced", ""))}/{os.path.basename(output_file_path.replace("_enhanced", ""))}')
+    nome_pasta_arquivo = f"{"-".join(pasta_efeitos)}+{os.path.basename(output_file_path.replace("_enhanced", ""))}+{datetime.now().strftime("%d/%m/%Y %H:%M")}"
+    blob = bucket.blob(f'{user_id}/{nome_pasta_arquivo}/{os.path.basename(output_file_path)}')
+    blob_input_file = bucket.blob(f'{user_id}/{nome_pasta_arquivo}/{os.path.basename(output_file_path.replace("_enhanced", ""))}')
 
     try:
         blob.upload_from_filename(output_file_path)
