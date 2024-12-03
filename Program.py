@@ -91,22 +91,22 @@ async def process_audio(
     effects = []
     if apply_noise_gate:
         effects.append(NoiseGate(threshold_db=-30, ratio=1.5, release_ms=250))
-        pasta_efeitos.append("noise_gate")
+        pasta_efeitos.append("Noise_Gate")
     if apply_compressor:
         effects.append(Compressor(threshold_db=-16, ratio=2.5))
-        pasta_efeitos.append("compressor")
+        pasta_efeitos.append("Compressor")
     if apply_low_shelf_filter:
         effects.append(LowShelfFilter(cutoff_frequency_hz=400, gain_db=10, q=1))
-        pasta_efeitos.append("low_shelf_filter")
+        pasta_efeitos.append("Low_Shelf_Filter")
     if apply_gain:
         effects.append(Gain(gain_db=10))
-        pasta_efeitos.append("gain")
+        pasta_efeitos.append("Gain")
     if apply_reverb:
         effects.append(Reverb(room_size=0.5, damping=0.5, wet_level=0.3))
-        pasta_efeitos.append("reverb")
+        pasta_efeitos.append("Reverb")
     if apply_chorus:
         effects.append(Chorus(rate_hz=1.5, depth=0.5, mix=0.3))
-        pasta_efeitos.append("chorus")
+        pasta_efeitos.append("Chorus")
 
     board = Pedalboard(effects)
 
